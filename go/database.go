@@ -161,3 +161,21 @@ func itob(v int) []byte {
 	binary.BigEndian.PutUint64(b, uint64(v))
 	return b
 }
+
+// database_count_segments returns the total number of segments in the database
+func database_count_segments() int {
+	var count int
+	
+	database.View(func(tx *bbolt.Tx) error {
+		b := tx.Bucket([]byte("segments"))
+		if b == nil {
+			return nil
+		}
+		
+		stats := b.Stats()
+		count = stats.KeyN
+		return nil
+	})
+	
+	return count
+}
