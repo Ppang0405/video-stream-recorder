@@ -128,6 +128,57 @@ func main() {
 
 	router.HandleFunc("/start/{start}/{limit}/{ts:.+}", serve_ts_file)
 
+	// Add root handler for convenience
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		html := `<!DOCTYPE html>
+<html>
+<head>
+    <title>VSR - Video Stream Recorder</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; border-bottom: 2px solid #007cba; padding-bottom: 10px; }
+        .endpoint { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; border-left: 4px solid #007cba; }
+        .endpoint h3 { margin-top: 0; color: #007cba; }
+        code { background: #e9ecef; padding: 2px 6px; border-radius: 3px; font-family: monospace; }
+        .live { border-left-color: #28a745; }
+        .vod { border-left-color: #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 Video Stream Recorder (VSR)</h1>
+        <p>Welcome to VSR! Your HLS stream recorder is running.</p>
+        
+        <div class="endpoint live">
+            <h3>📡 Live Stream</h3>
+            <p><strong>HLS Manifest:</strong> <code>/live/stream.m3u8</code></p>
+            <p><strong>Example:</strong> <code>http://localhost:8080/live/stream.m3u8</code></p>
+        </div>
+        
+        <div class="endpoint vod">
+            <h3>🎬 Video On Demand (VOD)</h3>
+            <p><strong>VOD Manifest:</strong> <code>/start/{timestamp}/{duration}/vod.m3u8</code></p>
+            <p><strong>Stream Manifest:</strong> <code>/start/{timestamp}/{duration}/stream.m3u8</code></p>
+            <p><strong>Timestamp Format:</strong> YYYYMMDDHHMMSS (e.g., 20240107120000)</p>
+        </div>
+        
+        <div class="endpoint">
+            <h3>🔗 Quick Links</h3>
+            <p><a href="/live/stream.m3u8">Live Stream (M3U8)</a></p>
+        </div>
+    </div>
+</body>
+</html>`
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(html))
+	})
+
+	// Add /live redirect for convenience
+	router.HandleFunc("/live", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/live/stream.m3u8", http.StatusFound)
+	})
+
 	log.Printf("Starting server on %v", *flagBindTo)
 	log.Fatal(http.ListenAndServe(*flagBindTo, router))
 }
